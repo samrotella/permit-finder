@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
+// Use environment variable for API URL in production, empty string for development (relative URLs)
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 function App() {
   const [formData, setFormData] = useState({
     email: '',
@@ -103,7 +106,7 @@ function App() {
 
   const saveEmail = async (email, city, state) => {
     try {
-      const response = await fetch('/api/save-email', {
+      const response = await fetch(`${API_URL}/api/save-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -127,7 +130,7 @@ function App() {
 
   const fetchPermitRequirements = async (city, state) => {
     try {
-      const response = await fetch('/api/permit-requirements', {
+      const response = await fetch(`${API_URL}/api/permit-requirements`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
