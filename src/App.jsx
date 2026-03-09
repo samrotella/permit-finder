@@ -218,7 +218,7 @@ function App() {
     <div className="app">
       <header className="header">
         <div className="header-content">
-          <h1 className="logo">PermitFinder</h1>
+          <h1 className="logo">Permit Lift</h1>
           <p className="tagline">Navigate construction permits with confidence</p>
         </div>
       </header>
@@ -635,7 +635,7 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>© 2024 PermitFinder • Always verify requirements with your local building department</p>
+        <p>© 2026 Permit Lift • Always verify requirements with your local building department</p>
       </footer>
     </div>
   );

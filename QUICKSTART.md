@@ -1,4 +1,4 @@
-# Quick Start Guide - PermitFinder
+# Quick Start Guide - Permit Lift
 
 ## 🚀 Get Running in 5 Minutes
 

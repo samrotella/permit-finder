@@ -1,4 +1,4 @@
-# PermitFinder - Construction Permit Lookup Tool
+# Permit Lift - Construction Permit Lookup Tool
 
 A modern web application that helps users find exact construction permit requirements for their location and project type. Built with React, Node.js, and Supabase.
 

@@ -1,7 +1,7 @@
 {
   "name": "permit-finder-server",
   "version": "1.0.0",
-  "description": "Backend API for PermitFinder - Construction Permit Lookup Tool",
+  "description": "Backend API for Permit Lift - Construction Permit Lookup Tool",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
