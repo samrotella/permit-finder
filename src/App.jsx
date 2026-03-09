@@ -9,6 +9,7 @@ function App() {
     email: '',
     city: '',
     state: '',
+    projectCategory: '',
   });
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -31,6 +32,11 @@ function App() {
     'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
     'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
     'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+  ];
+
+  const projectCategories = [
+    'Residential',
+    'Commercial',
   ];
 
   const loadingMessages = [
@@ -75,8 +81,8 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.city || !formData.state) {
-      setError('Please fill in city and state');
+    if (!formData.city || !formData.state || !formData.projectCategory) {
+      setError('Please fill in city, state, and project category');
       return;
     }
 
@@ -87,13 +93,14 @@ function App() {
     try {
       // Save email if provided (optional)
       if (formData.email) {
-        await saveEmail(formData.email, formData.city, formData.state);
+        await saveEmail(formData.email, formData.city, formData.state, formData.projectCategory);
       }
 
       // Fetch permit requirements
       const permitData = await fetchPermitRequirements(
         formData.city,
-        formData.state
+        formData.state,
+        formData.projectCategory
       );
 
       setResults(permitData);
@@ -104,7 +111,7 @@ function App() {
     }
   };
 
-  const saveEmail = async (email, city, state) => {
+  const saveEmail = async (email, city, state, projectCategory) => {
     try {
       const response = await fetch(`${API_URL}/api/save-email`, {
         method: 'POST',
@@ -115,6 +122,7 @@ function App() {
           email,
           city,
           state,
+          projectCategory,
           timestamp: new Date().toISOString(),
         }),
       });
@@ -128,7 +136,7 @@ function App() {
     }
   };
 
-  const fetchPermitRequirements = async (city, state) => {
+  const fetchPermitRequirements = async (city, state, projectCategory) => {
     try {
       const response = await fetch(`${API_URL}/api/permit-requirements`, {
         method: 'POST',
@@ -138,6 +146,7 @@ function App() {
         body: JSON.stringify({
           city,
           state,
+          projectCategory,
         }),
       });
 
@@ -157,6 +166,7 @@ function App() {
       email: '',
       city: '',
       state: '',
+      projectCategory: '',
     });
     setResults(null);
     setError(null);
@@ -277,6 +287,25 @@ function App() {
                   </div>
                 </div>
 
+                <div className="form-group">
+                  <label htmlFor="projectCategory">
+                    Project Category <span className="required">*</span>
+                  </label>
+                  <select
+                    id="projectCategory"
+                    name="projectCategory"
+                    value={formData.projectCategory}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    required
+                  >
+                    <option value="">Select category</option>
+                    {projectCategories.map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+
                 {error && (
                   <div className="error-message">
                     {error}
@@ -307,12 +336,12 @@ function App() {
                 <div>
                   <h2>Building Permit Guide</h2>
                   <p className="location-info">
-                    {formData.city}, {formData.state}
+                    {formData.city}, {formData.state} • {formData.projectCategory}
                   </p>
                 </div>
                 <div className="header-actions">
                   <button onClick={shareResults} className="share-button" title="Share these results">
-                    {copiedField === 'share' ? '✓ Copied!' : '🔗 Share'}
+                    {copiedField === 'share' ? 'Copied!' : 'Share'}
                   </button>
                   <button onClick={resetForm} className="new-search-button">
                     New Search
@@ -324,7 +353,7 @@ function App() {
                 {/* Check if this is unsupported city (generic fallback) */}
                 {results.isGeneric && (
                   <div className="unsupported-notice">
-                    <h3>⚠️ Limited Information Available</h3>
+                    <h3>Limited Information Available</h3>
                     <p>We don't have detailed permit data for {formData.city}, {formData.state} yet. Below is general permit information that may apply.</p>
                     <div className="unsupported-actions">
                       <p><strong>We recommend:</strong></p>
@@ -343,7 +372,7 @@ function App() {
                       className="section-header"
                       onClick={() => toggleSection('contact')}
                     >
-                      <h3>📞 Permit Office Contact</h3>
+                      <h3>Permit Office Contact</h3>
                       <span className="collapse-icon">{expandedSections.contact ? '▼' : '▶'}</span>
                     </div>
                     {expandedSections.contact && (
@@ -365,7 +394,7 @@ function App() {
                                   onClick={() => copyToClipboard(results.permitOffice.phone, 'phone')}
                                   title="Copy phone number"
                                 >
-                                  {copiedField === 'phone' ? '✓' : '📋'}
+                                  {copiedField === 'phone' ? 'Copied' : 'Copy'}
                                 </button>
                               </div>
                             </div>
@@ -380,7 +409,7 @@ function App() {
                                   onClick={() => copyToClipboard(results.permitOffice.email, 'email')}
                                   title="Copy email"
                                 >
-                                  {copiedField === 'email' ? '✓' : '📋'}
+                                  {copiedField === 'email' ? 'Copied' : 'Copy'}
                                 </button>
                               </div>
                             </div>
@@ -411,7 +440,7 @@ function App() {
                                   onClick={() => copyToClipboard(results.permitOffice.address, 'address')}
                                   title="Copy address"
                                 >
-                                  {copiedField === 'address' ? '✓' : '📋'}
+                                  {copiedField === 'address' ? 'Copied' : 'Copy'}
                                 </button>
                               </div>
                             </div>
@@ -428,7 +457,7 @@ function App() {
                       className="section-header"
                       onClick={() => toggleSection('requiresPermit')}
                     >
-                      <h3>✅ What Requires a Building Permit?</h3>
+                      <h3>What Requires a Building Permit?</h3>
                       <span className="collapse-icon">{expandedSections.requiresPermit ? '▼' : '▶'}</span>
                     </div>
                     {expandedSections.requiresPermit && (
@@ -449,7 +478,7 @@ function App() {
                       className="section-header"
                       onClick={() => toggleSection('noPermit')}
                     >
-                      <h3>❌ What Doesn't Require a Permit?</h3>
+                      <h3>What Doesn't Require a Permit?</h3>
                       <span className="collapse-icon">{expandedSections.noPermit ? '▼' : '▶'}</span>
                     </div>
                     {expandedSections.noPermit && (
@@ -473,52 +502,17 @@ function App() {
                       className="section-header"
                       onClick={() => toggleSection('fees')}
                     >
-                      <h3>💰 Building Permit Costs</h3>
+                      <h3>Building Permit Costs</h3>
                       <span className="collapse-icon">{expandedSections.fees ? '▼' : '▶'}</span>
                     </div>
                     {expandedSections.fees && (
                       <div className="section-content">
-                        {results.fees.residential && (
-                          <div className="fee-category">
-                            <h4>Residential Fees</h4>
-                            <div className="fee-table">
-                              {results.fees.residential.map((fee, index) => (
-                                <div key={index} className="fee-row">
-                                  <span className="fee-type">{fee.type}</span>
-                                  <span className="fee-amount">{fee.amount}</span>
-                                </div>
-                              ))}
-                            </div>
+                        {results.fees.map((fee, index) => (
+                          <div key={index} className="fee-row">
+                            <span className="fee-type">{fee.type}</span>
+                            <span className="fee-amount">{fee.amount}</span>
                           </div>
-                        )}
-
-                        {results.fees.commercial && (
-                          <div className="fee-category">
-                            <h4>Commercial Fees</h4>
-                            <div className="fee-table">
-                              {results.fees.commercial.map((fee, index) => (
-                                <div key={index} className="fee-row">
-                                  <span className="fee-type">{fee.type}</span>
-                                  <span className="fee-amount">{fee.amount}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {results.fees.additional && (
-                          <div className="fee-category">
-                            <h4>Additional Fees</h4>
-                            <div className="fee-table">
-                              {results.fees.additional.map((fee, index) => (
-                                <div key={index} className="fee-row">
-                                  <span className="fee-type">{fee.type}</span>
-                                  <span className="fee-amount">{fee.amount}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                        ))}
                       </div>
                     )}
                   </section>
@@ -530,7 +524,7 @@ function App() {
                       className="section-header"
                       onClick={() => toggleSection('requirements')}
                     >
-                      <h3>📋 Building Permit Requirements</h3>
+                      <h3>Building Permit Requirements</h3>
                       <span className="collapse-icon">{expandedSections.requirements ? '▼' : '▶'}</span>
                     </div>
                     {expandedSections.requirements && (
@@ -551,7 +545,7 @@ function App() {
                       className="section-header"
                       onClick={() => toggleSection('howToApply')}
                     >
-                      <h3>📝 How to Apply for a Building Permit</h3>
+                      <h3>How to Apply for a Building Permit</h3>
                       <span className="collapse-icon">{expandedSections.howToApply ? '▼' : '▶'}</span>
                     </div>
                     {expandedSections.howToApply && (
@@ -574,7 +568,7 @@ function App() {
                       className="section-header"
                       onClick={() => toggleSection('resources')}
                     >
-                      <h3>🔗 Permitting Resources</h3>
+                      <h3>Permitting Resources</h3>
                       <span className="collapse-icon">{expandedSections.resources ? '▼' : '▶'}</span>
                     </div>
                     {expandedSections.resources && (
@@ -611,7 +605,7 @@ function App() {
 
             {/* Floating New Search Button for Mobile */}
             <button className="floating-new-search" onClick={resetForm} title="New Search">
-              🔍
+              Search
             </button>
           </div>
         )}
