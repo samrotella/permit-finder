@@ -338,6 +338,16 @@ function App() {
                   <p className="location-info">
                     {formData.city}, {formData.state} • {formData.projectCategory}
                   </p>
+                  {results.applicationUrl && (
+                    <a 
+                      href={results.applicationUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="application-link"
+                    >
+                      View Permit Application →
+                    </a>
+                  )}
                 </div>
                 <div className="header-actions">
                   <button onClick={shareResults} className="share-button" title="Share these results">
