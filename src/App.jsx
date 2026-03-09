@@ -17,12 +17,12 @@ function App() {
   const [error, setError] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
     contact: true,
+    resources: true,  // Now expanded by default
     requiresPermit: false,
     noPermit: false,
     fees: false,
     requirements: true,
     howToApply: false,
-    resources: false,
   });
   const [copiedField, setCopiedField] = useState(null);
 
@@ -172,12 +172,12 @@ function App() {
     setError(null);
     setExpandedSections({
       contact: true,
+      resources: true,
       requiresPermit: false,
       noPermit: false,
       fees: false,
       requirements: true,
       howToApply: false,
-      resources: false,
     });
     window.history.pushState({}, '', '/');
   };
@@ -366,6 +366,7 @@ function App() {
                   </div>
                 )}
 
+                {/* 1. PERMIT OFFICE CONTACT */}
                 {results.permitOffice && (
                   <section className="info-section collapsible">
                     <div 
@@ -451,6 +452,38 @@ function App() {
                   </section>
                 )}
 
+                {/* 2. PERMITTING RESOURCES - MOVED UP AND EXPANDED BY DEFAULT */}
+                {results.resources && results.resources.length > 0 && (
+                  <section className="info-section collapsible resources-section">
+                    <div 
+                      className="section-header"
+                      onClick={() => toggleSection('resources')}
+                    >
+                      <h3>Permitting Resources</h3>
+                      <span className="collapse-icon">{expandedSections.resources ? '▼' : '▶'}</span>
+                    </div>
+                    {expandedSections.resources && (
+                      <div className="section-content">
+                        <div className="resources-grid">
+                          {results.resources.map((resource, index) => (
+                            <a 
+                              key={index} 
+                              href={resource.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="resource-card"
+                            >
+                              <span className="resource-name">{resource.name}</span>
+                              <span className="resource-arrow">→</span>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </section>
+                )}
+
+                {/* 3. WHAT REQUIRES A PERMIT */}
                 {results.requiresPermit && results.requiresPermit.length > 0 && (
                   <section className="info-section collapsible">
                     <div 
@@ -472,6 +505,7 @@ function App() {
                   </section>
                 )}
 
+                {/* 4. WHAT DOESN'T REQUIRE A PERMIT */}
                 {results.noPermitNeeded && results.noPermitNeeded.length > 0 && (
                   <section className="info-section collapsible">
                     <div 
@@ -496,6 +530,7 @@ function App() {
                   </section>
                 )}
 
+                {/* 5. BUILDING PERMIT COSTS */}
                 {results.fees && (
                   <section className="info-section collapsible">
                     <div 
@@ -518,6 +553,7 @@ function App() {
                   </section>
                 )}
 
+                {/* 6. BUILDING PERMIT REQUIREMENTS */}
                 {results.requiredDocuments && results.requiredDocuments.length > 0 && (
                   <section className="info-section collapsible">
                     <div 
@@ -539,6 +575,7 @@ function App() {
                   </section>
                 )}
 
+                {/* 7. HOW TO APPLY */}
                 {results.howToApply && results.howToApply.length > 0 && (
                   <section className="info-section collapsible">
                     <div 
@@ -562,31 +599,7 @@ function App() {
                   </section>
                 )}
 
-                {results.resources && results.resources.length > 0 && (
-                  <section className="info-section collapsible">
-                    <div 
-                      className="section-header"
-                      onClick={() => toggleSection('resources')}
-                    >
-                      <h3>Permitting Resources</h3>
-                      <span className="collapse-icon">{expandedSections.resources ? '▼' : '▶'}</span>
-                    </div>
-                    {expandedSections.resources && (
-                      <div className="section-content">
-                        <ul className="resources-list">
-                          {results.resources.map((resource, index) => (
-                            <li key={index} className="resource-item">
-                              <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                                {resource.name} →
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </section>
-                )}
-
+                {/* ADDITIONAL INFO */}
                 {results.additionalInfo && (
                   <section className="info-section">
                     <div className="additional-info-box">
