@@ -189,7 +189,7 @@ function getLancasterCityPermitInfo(projectCategory) {
     isGeneric: false,
     applicationUrl: isResidential 
   ? 'https://www.cityoflancasterpa.gov/wp-content/uploads/2020/02/Residential-Permit-Application-rev-12-19-22.pdf'
-  : 'https://www.cityoflancasterpa.gov/building-permits/', // or the commercial application URL
+  : 'https://www.cityoflancasterpa.gov/building-permits/#docaccess-1bbc24851c398e362210f90a651cfb2a98adb14a0c0637279a08a5afb9aec1c8', // or the commercial application URL
     permitOffice: {
       name: 'Bureau of Building Code Administration',
       phone: '(717) 291-4724',
