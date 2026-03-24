@@ -176,6 +176,9 @@ async function fetchPermitData(city, state, projectCategory) {
   if (normalized.city === 'lancaster' && normalized.state === 'PA') {
     return getLancasterCityPermitInfo(projectCategory);
   }
+  else if(normalized.city === 'harrisburg' && normalized.state === 'PA') {
+    return getHarrisburgPermitInfo(projectCategory);
+  }
   
   // For other cities, return general information
   return getGeneralPermitInfo(city, state, projectCategory);
@@ -317,6 +320,143 @@ function getLancasterCityPermitInfo(projectCategory) {
     lastUpdated: new Date().toISOString(),
   };
 }
+
+function getHarrisburgPermitInfo(projectCategory) {
+  const isResidential = projectCategory === 'Residential';
+ 
+  return {
+    isGeneric: false,
+    applicationUrl: 'https://cms2.revize.com/revize/harrisburgpa/Building%20Permit%20Application%20with%20Instructions%2028MAR25.pdf?t=202505020933100&t=202505020933100',
+    permitOffice: {
+      name: 'Bureau of Codes',
+      phone: '(717) 255-6553',
+      email: null,
+      website: 'https://harrisburgpa.gov/services/codes/index.php',
+      address: 'Martin Luther King Government Center, 10 N 2nd Street, Suite 205, Harrisburg, PA 17101',
+      hours: 'Monday-Friday, 8:00 AM - 4:30 PM',
+    },
+    requiresPermit: isResidential ? [
+      'New construction (one/two-family homes)',
+      'Additions and structural modifications',
+      'Interior alterations and renovations',
+      'Decks, porches, and structural additions',
+      'Electrical work (requires separate electrical permit and licensed electrician)',
+      'Plumbing work (requires separate plumbing permit and licensed plumber)',
+      'Mechanical/HVAC systems',
+      'Reroofing',
+      'Fences',
+      'Demolition',
+      'Low-voltage systems (fire alarm, cable, security — when replacing 50%+ of system, breaching walls/floors/ceilings, or installing new system)',
+    ] : [
+      'New commercial construction',
+      'Tenant improvements and interior alterations',
+      'Additions and structural modifications',
+      'Electrical work (requires separate electrical permit)',
+      'Plumbing work (requires separate plumbing permit)',
+      'Mechanical/HVAC systems',
+      'Fire alarm and suppression systems',
+      'Low-voltage electrical installations (permit required before work commences)',
+      'Signage',
+      'Demolition',
+      'Extensive rehabilitation in Historic District (requires Bureau of Planning approval)',
+      'New construction or extensive rehabilitation in 100-year flood plain (requires Bureau of Planning approval)',
+    ],
+    noPermitNeeded: isResidential ? [
+      'Replacing lighting fixtures (wall- or ceiling-mounted), duplex receptacles, or switches in an existing electrical system (no license or permit required)',
+      'Replacing circuit breakers or fuses',
+      'Replacing existing waste line traps, faucets, or plumbing fixtures (sinks, lavatories, toilets, shower stalls, bathtubs) — owner-occupied single-family dwellings only',
+      'Emergency water supply line repairs (only enough work to stop a leak; permit must be filed within 3 business days)',
+      'Routine maintenance and minor repairs that do not alter structure or systems',
+    ] : [
+      'Minor finish work (painting, flooring, non-structural cosmetic improvements)',
+      'Routine maintenance and minor repairs that do not alter structure, electrical, plumbing, or mechanical systems',
+      'Emergency repairs (permit must be filed within 3 business days)',
+    ],
+    noPermitNote: isResidential
+      ? 'Note: Projects in a municipal Historic District involving exterior improvements may require additional review by the Bureau of Planning (717-255-6419). Permits expire after 6 months if work is not continuous.'
+      : 'Note: Commercial projects in a Historic District require Bureau of Planning approval. Projects in the 100-year flood plain require additional review. Permits expire after 6 months if work is not continuous. Fast-tracking (progressive permits for each phase) is available for multi-phase jobs.',
+    fees: isResidential ? [
+      { type: 'Building permit application fee', amount: '$75' },
+      { type: 'Building permit — plan review (due at application)', amount: '$4 per $1,000 of estimated cost (nonrefundable)' },
+      { type: 'Building permit — inspection (due at permit issuance)', amount: '$4 per $1,000 of estimated cost' },
+      { type: 'Electrical permit application fee', amount: '$75' },
+      { type: 'Electrical permit — per $1,000 of estimated cost', amount: '$3' },
+      { type: 'Plumbing permit application fee', amount: '$75' },
+      { type: 'Plumbing permit — per $1,000 of estimated cost', amount: '$8' },
+      { type: 'Zoning permit fee', amount: '$3' },
+      { type: 'PA State UCC surcharge (all permits)', amount: '$4.50' },
+      { type: 'Work started without permit (administrative penalty)', amount: 'Double the normal permit fee' },
+      { type: 'Demolition permit', amount: '$40 for first $1,000 + $30 per additional $1,000' },
+    ] : [
+      { type: 'Building permit application fee', amount: '$100' },
+      { type: 'Building permit — plan review (due at application)', amount: '$5 per $1,000 of estimated cost (nonrefundable)' },
+      { type: 'Building permit — inspection (due at permit issuance)', amount: '$5 per $1,000 of estimated cost' },
+      { type: 'Electrical permit application fee', amount: '$100' },
+      { type: 'Electrical permit — per $1,000 of estimated cost', amount: '$3' },
+      { type: 'Plumbing permit application fee', amount: '$100' },
+      { type: 'Plumbing permit — per $1,000 of estimated cost', amount: '$10' },
+      { type: 'Zoning permit fee', amount: '$3' },
+      { type: 'PA State UCC surcharge (all permits)', amount: '$4.50' },
+      { type: 'Work started without permit (administrative penalty)', amount: 'Double the normal permit fee' },
+      { type: 'Building relocation permit', amount: '$100 + $5 per $1,000 of estimated cost for new foundation and related work' },
+      { type: 'Demolition permit', amount: '$40 for first $1,000 + $30 per additional $1,000' },
+    ],
+    requiredDocuments: isResidential ? [
+      'Completed Building/Fire/Zoning Permit Application',
+      'Construction plans/drawings showing proposed work',
+      'Site plan showing property lines and proposed construction',
+      'Project cost estimate (estimated cost of materials and labor)',
+      'Contractor information (licensed contractors required for electrical and plumbing work)',
+      'Proof of property liability insurance (for residential property owners doing their own electrical work)',
+      'Stormwater management plan (if required by City Engineer for new development)',
+      'Historic Review Board approval (if in a Historic District — contact Bureau of Planning at 717-255-6419)',
+    ] : [
+      'Completed Building/Fire/Zoning Permit Application',
+      'Commercial Construction Documents Submittal form',
+      'Construction plans and specifications',
+      'Engineered plans stamped by a licensed design professional (expedites review from 30 to 5 business days)',
+      'Site plan showing property boundaries and proposed construction',
+      'Project cost estimate',
+      'Licensed contractor information and credentials',
+      'Proof of insurance',
+      'Stormwater management plan approval from City Engineer (for new development)',
+      'Historic District approval from Bureau of Planning (if applicable)',
+      'Flood plain development approval from Bureau of Planning (if in 100-year flood plain)',
+      'Separate electrical permit application (for electrical work)',
+      'Separate plumbing permit application (for plumbing work)',
+    ],
+    howToApply: isResidential ? [
+      'Prepare your documents: Download the Building/Fire/Zoning Permit Application from the Bureau of Codes forms page. Gather plans, cost estimates, and contractor information.',
+      'Submit your application in person at the Martin Luther King Government Center, 10 N 2nd Street, Suite 205, Harrisburg, PA 17101, or by mail with all pertinent information and permit fees.',
+      'Pay fees at submission: The application fee ($75) plus plan review fees ($4 per $1,000 of estimated cost) are due at application. Plan review fees are nonrefundable.',
+      'Plan review: Residential applications are reviewed within 15 business days, or 5 business days if stamped by a licensed design professional. Additional time is needed if Historic Review Board approval is required.',
+      'Pay inspection fees at permit issuance: $4 per $1,000 of estimated cost is due when the permit is issued.',
+      'Begin construction: Post your permit at the job site. Schedule required inspections. Permits expire after 6 months if work is not continuous. Fast-tracking (progressive permits per phase) is available for multi-phase jobs.',
+    ] : [
+      'Pre-application: For projects in a Historic District or flood plain, contact the Bureau of Planning (717-255-6419) before applying. For street excavation or curb cuts, contact City Engineering (717-255-3091).',
+      'Prepare your documents: Download the Building/Fire/Zoning Permit Application and Commercial Construction Documents Submittal form. Having plans stamped by a licensed design professional expedites review from 30 to 5 business days.',
+      'Submit your application in person at the Martin Luther King Government Center, 10 N 2nd Street, Suite 205, or by mail with all pertinent information and permit fees.',
+      'Pay fees at submission: Application fee ($100) plus plan review fees ($5 per $1,000 of estimated cost, nonrefundable) are due at application.',
+      'Plan review: Commercial applications are reviewed within 30 business days, or 5 business days if stamped by a licensed design professional. Additional time if Zoning or Historic Board review is required.',
+      'Pay inspection fees at permit issuance: $5 per $1,000 of estimated cost is due when the permit is issued.',
+      'File separate permits for electrical, plumbing, and low-voltage work as applicable.',
+      'Begin construction: Post your permit at the job site. Schedule inspections for each phase. Fast-tracking (progressive permits) is available for multi-phase jobs. Permits expire after 6 months if work is not continuous.',
+    ],
+    resources: [
+      { name: 'Bureau of Codes — Permits & FAQ', url: 'https://harrisburgpa.gov/services/codes/index.php' },
+      { name: 'Building/Fire/Zoning Permit Application', url: 'https://harrisburgpa.gov/download/building-fire-zoning-permit/' },
+      { name: 'Permit Forms & Documents', url: 'https://harrisburgpa.gov/services/codes/documents_forms.php' },
+      { name: 'City Building Code (eCode360)', url: 'https://ecode360.com/13780116' },
+      { name: 'City Electrical Code (eCode360)', url: 'https://ecode360.com/13780136' },
+    ],
+    additionalInfo: isResidential
+      ? 'All permits are subject to a $4.50 PA State UCC surcharge. Harrisburg follows the 2021 IRC, 2020 NEC (NFPA-2020), and other PA UCC adopted codes effective January 1, 2026. Electrical work requires a licensed electrician and separate electrical permit. Plumbing work requires a licensed plumber and separate plumbing permit (residential property owners may do limited plumbing work with a residential property owner plumber\'s license, but cannot work on gas lines). If work begins without a permit, the applicant must pay double the normal permit fee. For water/sewer questions, contact Capital Region Water at 888-510-0606.'
+      : 'All permits are subject to a $4.50 PA State UCC surcharge. Harrisburg follows the 2021 IBC, 2020 NEC (NFPA-2020), and other PA UCC adopted codes effective January 1, 2026. Electrical work requires a licensed electrician and separate electrical permit. Plumbing work requires a licensed master plumber and separate plumbing permit. Electrical drawings may be required for all commercial/industrial usage as deemed necessary by the Bureau. If work begins without a permit, the applicant must pay double the normal permit fee. New developers mandated by law to submit a stormwater management plan must obtain City Engineer approval before receiving a building permit. For water/sewer questions, contact Capital Region Water at 888-510-0606.',
+    lastUpdated: new Date().toISOString(),
+  };
+}
+ 
+// module.exports = { getHarrisburgPermitInfo };
 
 // General permit information for other cities
 function getGeneralPermitInfo(city, state, projectCategory) {
