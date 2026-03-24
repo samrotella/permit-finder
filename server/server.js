@@ -1,8 +1,6 @@
 // server.js - Backend API for fetching permit requirements
 const express = require('express');
 const cors = require('cors');
-const axios = require('axios');
-const cheerio = require('cheerio');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
@@ -46,21 +44,11 @@ app.post('/api/save-email', async (req, res) => {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    // Save to Supabase
     const { data, error } = await supabase
       .from('user_emails')
-      .insert([
-        {
-          email,
-          city,
-          state,
-          project_category: projectCategory,
-          created_at: timestamp,
-        },
-      ]);
+      .insert([{ email, city, state, project_category: projectCategory, created_at: timestamp }]);
 
     if (error) throw error;
-
     res.json({ success: true, data });
   } catch (error) {
     console.error('Error saving email:', error);
@@ -74,15 +62,15 @@ app.post('/api/permit-requirements', async (req, res) => {
     const { city, state, projectCategory } = req.body;
 
     if (!city || !state || !projectCategory) {
-      return res.status(400).json({ 
-        error: 'City, state, and project category are required' 
+      return res.status(400).json({
+        error: 'City, state, and project category are required'
       });
     }
 
     // Check cache first
     const cacheKey = getCacheKey(city, state, projectCategory);
     const cachedData = permitCache.get(cacheKey);
-    
+
     if (cachedData && Date.now() - cachedData.timestamp < CACHE_DURATION) {
       console.log('Returning cached data for:', cacheKey);
       return res.json(cachedData.data);
@@ -91,32 +79,25 @@ app.post('/api/permit-requirements', async (req, res) => {
     // Check database for existing permit data
     const dbData = await getPermitDataFromDB(city, state, projectCategory);
     if (dbData) {
-      // Update cache
-      permitCache.set(cacheKey, {
-        data: dbData,
-        timestamp: Date.now(),
-      });
+      permitCache.set(cacheKey, { data: dbData, timestamp: Date.now() });
       return res.json(dbData);
     }
 
-    // Fetch from government sources
+    // Fetch from local data or fallback
     const permitData = await fetchPermitData(city, state, projectCategory);
 
     // Save to database for future use
     await savePermitDataToDB(city, state, projectCategory, permitData);
 
     // Update cache
-    permitCache.set(cacheKey, {
-      data: permitData,
-      timestamp: Date.now(),
-    });
+    permitCache.set(cacheKey, { data: permitData, timestamp: Date.now() });
 
     res.json(permitData);
   } catch (error) {
     console.error('Error fetching permit requirements:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch permit requirements',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -125,7 +106,6 @@ app.post('/api/permit-requirements', async (req, res) => {
 async function getPermitDataFromDB(city, state, projectCategory) {
   try {
     const normalized = normalizeLocation(city, state);
-    
     const { data, error } = await supabase
       .from('permit_data')
       .select('*')
@@ -135,7 +115,6 @@ async function getPermitDataFromDB(city, state, projectCategory) {
       .single();
 
     if (error || !data) return null;
-
     return data.permit_info;
   } catch (error) {
     console.error('Database query error:', error);
@@ -147,20 +126,15 @@ async function getPermitDataFromDB(city, state, projectCategory) {
 async function savePermitDataToDB(city, state, projectCategory, permitData) {
   try {
     const normalized = normalizeLocation(city, state);
-    
     const { error } = await supabase
       .from('permit_data')
-      .upsert([
-        {
-          city: normalized.city,
-          state: normalized.state,
-          project_category: projectCategory,
-          permit_info: permitData,
-          last_updated: new Date().toISOString(),
-        },
-      ], {
-        onConflict: 'city,state,project_category'
-      });
+      .upsert([{
+        city: normalized.city,
+        state: normalized.state,
+        project_category: projectCategory,
+        permit_info: permitData,
+        last_updated: new Date().toISOString(),
+      }], { onConflict: 'city,state,project_category' });
 
     if (error) throw error;
   } catch (error) {
@@ -168,31 +142,36 @@ async function savePermitDataToDB(city, state, projectCategory, permitData) {
   }
 }
 
-// Fetch permit data from government sources
+// Fetch permit data — route to city-specific data or fallback
 async function fetchPermitData(city, state, projectCategory) {
   const normalized = normalizeLocation(city, state);
-  
-  // Check if this is Lancaster City, PA
+
+  // Lancaster City, PA
   if (normalized.city === 'lancaster' && normalized.state === 'PA') {
     return getLancasterCityPermitInfo(projectCategory);
   }
-  else if(normalized.city === 'harrisburg' && normalized.state === 'PA') {
+
+  // Harrisburg, PA
+  if (normalized.city === 'harrisburg' && normalized.state === 'PA') {
     return getHarrisburgPermitInfo(projectCategory);
   }
-  
-  // For other cities, return general information
+
+  // All other cities — generic fallback
   return getGeneralPermitInfo(city, state, projectCategory);
 }
 
-// Lancaster City, PA specific permit information
+
+// =============================================================================
+// LANCASTER CITY, PA
+// =============================================================================
 function getLancasterCityPermitInfo(projectCategory) {
   const isResidential = projectCategory === 'Residential';
-  
+
   return {
     isGeneric: false,
-    applicationUrl: isResidential 
-  ? 'https://www.cityoflancasterpa.gov/wp-content/uploads/2020/02/Residential-Permit-Application-rev-12-19-22.pdf'
-  : 'https://www.cityoflancasterpa.gov/building-permits/#docaccess-1bbc24851c398e362210f90a651cfb2a98adb14a0c0637279a08a5afb9aec1c8', // or the commercial application URL
+    applicationUrl: isResidential
+      ? 'https://www.cityoflancasterpa.gov/wp-content/uploads/2020/02/Residential-Permit-Application-rev-12-19-22.pdf'
+      : 'https://www.cityoflancasterpa.gov/building-permits/#docaccess-1bbc24851c398e362210f90a651cfb2a98adb14a0c0637279a08a5afb9aec1c8',
     permitOffice: {
       name: 'Bureau of Building Code Administration',
       phone: '(717) 291-4724',
@@ -237,24 +216,24 @@ function getLancasterCityPermitInfo(projectCategory) {
       'Furniture and fixture installation (non-structural)',
       'Minor repairs that don\'t affect building systems',
     ],
-    noPermitNote: isResidential 
+    noPermitNote: isResidential
       ? 'Note: Even if a project is exempt from a building permit, zoning or historic district rules may still apply.'
       : 'Note: Commercial projects often require multiple permits and third-party plan review. Always verify with the Building Code Administration.',
     fees: isResidential ? [
       { type: 'New construction', amount: '$0.45 per sq ft (minimum $150)' },
-      { type: 'Renovations & alterations ($300–$4,999)', amount: '$75' },
-      { type: 'Renovations & alterations ($5,000–$9,999)', amount: '$150' },
+      { type: 'Renovations & alterations ($300-$4,999)', amount: '$75' },
+      { type: 'Renovations & alterations ($5,000-$9,999)', amount: '$150' },
       { type: 'Renovations & alterations ($10,000+)', amount: '$225 + $15 per additional $1,000' },
-      { type: 'Single-trade permits ($300–$4,999)', amount: '$50' },
-      { type: 'Single-trade permits ($5,000–$9,999)', amount: '$100' },
+      { type: 'Single-trade permits ($300-$4,999)', amount: '$50' },
+      { type: 'Single-trade permits ($5,000-$9,999)', amount: '$100' },
       { type: 'Single-trade permits ($10,000+)', amount: '$150 + $10 per additional $1,000' },
       { type: 'Electrical service / fire detection system', amount: 'Flat $130' },
       { type: 'State education surcharge (all permits)', amount: '$4.50' },
     ] : [
       { type: 'New construction, additions, accessory structures', amount: '$0.50 per sq ft (minimum $200)' },
       { type: 'Plan review & inspections (third-party)', amount: '$0.065 per sq ft (minimum $500)' },
-      { type: 'Alterations ($300–$4,999)', amount: '$150' },
-      { type: 'Alterations ($5,000–$9,999)', amount: '$300' },
+      { type: 'Alterations ($300-$4,999)', amount: '$150' },
+      { type: 'Alterations ($5,000-$9,999)', amount: '$300' },
       { type: 'Alterations ($10,000+)', amount: 'Tiered: 0.15%-0.6% of project value' },
       { type: 'Fire systems & alterations', amount: '$30 per $1,000 of contract value (min $400)' },
       { type: 'Signage (separate permit)', amount: 'Based on valuation' },
@@ -314,16 +293,26 @@ function getLancasterCityPermitInfo(projectCategory) {
       { name: 'Residential Building Permit Application', url: 'https://www.cityoflancasterpa.gov/wp-content/uploads/2020/02/Residential-Permit-Application-rev-12-19-22.pdf' },
       { name: 'Building Code Fee Schedule', url: 'https://www.cityoflancasterpa.gov/wp-content/uploads/2023/03/PDF-Copy-of-New-Fee-Schedule-2023-117.pdf' },
     ],
-    additionalInfo: isResidential 
+    additionalInfo: isResidential
       ? 'All permits are subject to a $4.50 Pennsylvania state education surcharge. Projects may be subject to additional reviews (Engineering, Stormwater, Historic, and/or Zoning) as determined by staff. Always verify requirements with the Bureau of Building Code Administration.'
       : 'Commercial projects require third-party plan review and inspection in most cases. The City maintains a list of approved Third Party Code Agencies. You are responsible for paying third-party fees in addition to City permit fees. All fire system work must be performed by contractors with a Certificate of Fitness from the Fire Bureau. Always verify requirements with the Bureau of Building Code Administration.',
     lastUpdated: new Date().toISOString(),
   };
 }
 
+
+// =============================================================================
+// HARRISBURG, PA
+// Sources:
+//   - Bureau of Codes: harrisburgpa.gov/services/codes/index.php
+//   - Building Code (ecode360): ecode360.com/13780116
+//   - Electrical Code (ecode360): ecode360.com/13780136
+//   - Fee update (Fox43, 2024): fox43.com (new fees effective May 1, 2024)
+//   - Forms: harrisburgpa.gov/services/codes/documents_forms.php
+// =============================================================================
 function getHarrisburgPermitInfo(projectCategory) {
   const isResidential = projectCategory === 'Residential';
- 
+
   return {
     isGeneric: false,
     applicationUrl: 'https://cms2.revize.com/revize/harrisburgpa/Building%20Permit%20Application%20with%20Instructions%2028MAR25.pdf?t=202505020933100&t=202505020933100',
@@ -455,13 +444,14 @@ function getHarrisburgPermitInfo(projectCategory) {
     lastUpdated: new Date().toISOString(),
   };
 }
- 
-// module.exports = { getHarrisburgPermitInfo };
 
-// General permit information for other cities
+
+// =============================================================================
+// GENERAL FALLBACK — for cities without specific data
+// =============================================================================
 function getGeneralPermitInfo(city, state, projectCategory) {
   const isResidential = projectCategory === 'Residential';
-  
+
   return {
     isGeneric: true,
     permitOffice: {
@@ -535,8 +525,8 @@ app.get('/api/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📋 API endpoints:`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`API endpoints:`);
   console.log(`   POST /api/save-email`);
   console.log(`   POST /api/permit-requirements`);
   console.log(`   GET  /api/health`);
